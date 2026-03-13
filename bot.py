@@ -1,12 +1,15 @@
 import discord
 from discord import app_commands
 import pyotp
-
 import os
+
 TOKEN = os.getenv("TOKEN")
 
 class TwoFAView(discord.ui.View):
-    @discord.ui.button(label="Gerar Código 2FA", style=discord.ButtonStyle.primary)
+    def __init__(self):
+        super().__init__(timeout=None)  # botão nunca expira
+
+    @discord.ui.button(label="Gerar Código 2FA", style=discord.ButtonStyle.primary, custom_id="gerar_2fa")
     async def gerar(self, interaction: discord.Interaction, button: discord.ui.Button):
 
         class Modal2FA(discord.ui.Modal, title="Gerar Código 2FA"):
@@ -41,6 +44,7 @@ class TwoFAView(discord.ui.View):
 
         await interaction.response.send_modal(Modal2FA())
 
+
 class BotClient(discord.Client):
     def __init__(self):
         super().__init__(intents=discord.Intents.default())
@@ -48,6 +52,8 @@ class BotClient(discord.Client):
 
     async def setup_hook(self):
         await self.tree.sync()
+        self.add_view(TwoFAView())  # registra botão persistente
+
 
 client = BotClient()
 
@@ -61,5 +67,6 @@ async def painel(interaction: discord.Interaction):
     )
 
     await interaction.response.send_message(embed=embed, view=TwoFAView())
+
 
 client.run(TOKEN)
